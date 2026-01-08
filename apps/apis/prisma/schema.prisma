@@ -12,3 +12,30 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+// 패스키의 구현에는 두 테이블이 필요하다
+// 하나는 유저의 기본 정보를 담는 우리가 흔히 아는 유저 테이블
+model User {
+  id String @id @default(cuid())
+  email String @unique
+
+  // Credentials와의 1:N 관계
+  credentials Credential[]
+
+  @@map("users")
+}
+
+// 다른 하나는 패스키의 공개키를 저장해 두는 인증서 테이블이다
+model Credential {
+  id           Int      @id @default(autoincrement())
+  userId       String   @map("user_id")
+  credentialId String   @map("credential_id")
+  publicKey    String   @map("public_key") @db.Text
+  counter      Int
+  transports   String?  
+
+  // Relation 설정
+  user         User     @relation(fields: [userId], references: [id])
+  @@map("credentials") 
+}
+//이건 근데 OAuth 구현과 거의 같지 않아?
